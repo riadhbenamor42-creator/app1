@@ -1,0 +1,656 @@
+[expense_tracker.html](https://github.com/user-attachments/files/26265976/expense_tracker.html)
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تتبع المصاريف اليومية</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0e0c;
+    --surface: #1a1916;
+    --surface2: #242220;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #f0ece4;
+    --text2: #a09890;
+    --text3: #6a6460;
+    --accent: #e8a83a;
+    --accent-dim: rgba(232,168,58,0.15);
+    --accent-dim2: rgba(232,168,58,0.08);
+    --red: #e05c5c;
+    --green: #5cba8a;
+    --blue: #5c9de0;
+    --purple: #9d5ce0;
+    --teal: #5cc4ba;
+    --pink: #e05cb4;
+    --r: 12px;
+    --r2: 8px;
+  }
+
+  body {
+    font-family: 'Cairo', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  .app {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 24px 16px;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: var(--r2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+
+  h1 { font-size: 20px; font-weight: 700; color: var(--text); }
+  .subtitle { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+  .month-nav {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--r);
+    padding: 6px 12px;
+    font-size: 14px; font-weight: 600;
+  }
+
+  .nav-btn {
+    background: none; border: none; color: var(--text2);
+    cursor: pointer; font-size: 16px; padding: 0 4px;
+    transition: color 0.15s;
+  }
+  .nav-btn:hover { color: var(--accent); }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--r);
+    padding: 14px 16px;
+  }
+
+  .stat-label {
+    font-size: 11px; color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+
+  .stat-value {
+    font-size: 22px; font-weight: 700;
+    color: var(--text);
+  }
+
+  .stat-value.accent { color: var(--accent); }
+  .stat-value.red { color: var(--red); }
+  .stat-value.green { color: var(--green); }
+
+  .stat-sub {
+    font-size: 11px; color: var(--text3); margin-top: 4px;
+  }
+
+  .main-grid {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--r);
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 14px 18px;
+    border-bottom: 0.5px solid var(--border);
+    font-weight: 600; font-size: 13px;
+    color: var(--text2);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .panel-header span.dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+  }
+
+  .panel-body { padding: 16px 18px; }
+
+  .form-row { margin-bottom: 12px; }
+
+  label {
+    display: block;
+    font-size: 11px; font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 5px;
+  }
+
+  input, select {
+    width: 100%;
+    background: var(--surface2);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--r2);
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: 'Cairo', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s;
+    direction: rtl;
+  }
+
+  input:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim2);
+  }
+
+  select option { background: var(--surface2); }
+
+  .form-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .btn-add {
+    width: 100%;
+    background: var(--accent);
+    color: #1a1200;
+    border: none;
+    border-radius: var(--r2);
+    padding: 11px 16px;
+    font-family: 'Cairo', sans-serif;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .btn-add:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-add:active { transform: scale(0.98); }
+
+  .chart-tabs {
+    display: flex; gap: 6px;
+    padding: 12px 16px;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  .tab-btn {
+    background: none;
+    border: 0.5px solid var(--border2);
+    border-radius: 6px;
+    padding: 5px 12px;
+    color: var(--text2);
+    font-family: 'Cairo', sans-serif;
+    font-size: 12px; font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .tab-btn.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .chart-area {
+    padding: 16px;
+    position: relative;
+    height: 260px;
+  }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    padding: 0 16px 14px;
+  }
+
+  .legend-item {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 11px; color: var(--text2);
+  }
+
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .expenses-panel { }
+
+  .expenses-list { max-height: 320px; overflow-y: auto; }
+  .expenses-list::-webkit-scrollbar { width: 4px; }
+  .expenses-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .expense-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 18px;
+    border-bottom: 0.5px solid var(--border);
+    transition: background 0.1s;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn { from { opacity:0; transform: translateY(-4px); } to { opacity:1; transform: translateY(0); } }
+
+  .expense-item:last-child { border-bottom: none; }
+  .expense-item:hover { background: var(--surface2); }
+
+  .cat-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+
+  .expense-info { flex: 1; min-width: 0; }
+  .expense-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .expense-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  .expense-amount { font-size: 15px; font-weight: 700; color: var(--red); margin-left: 8px; }
+
+  .del-btn {
+    background: none; border: none;
+    color: var(--text3); cursor: pointer;
+    font-size: 15px; padding: 4px;
+    border-radius: 6px;
+    transition: color 0.1s, background 0.1s;
+    opacity: 0;
+  }
+
+  .expense-item:hover .del-btn { opacity: 1; }
+  .del-btn:hover { color: var(--red); background: rgba(224,92,92,0.1); }
+
+  .empty-state {
+    padding: 40px 20px; text-align: center;
+    color: var(--text3); font-size: 13px;
+  }
+
+  .empty-icon { font-size: 36px; margin-bottom: 10px; opacity: 0.4; }
+
+  .footer-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 18px;
+    border-top: 0.5px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .footer-label { font-size: 12px; color: var(--text3); }
+  .footer-total { font-size: 16px; font-weight: 700; color: var(--red); }
+
+  @media (max-width: 700px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .main-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="logo">
+      <div class="logo-icon">💰</div>
+      <div>
+        <h1>مصاريفي</h1>
+        <div class="subtitle">تتبع مصاريفك اليومية بسهولة</div>
+      </div>
+    </div>
+    <div class="month-nav">
+      <button class="nav-btn" onclick="prevMonth()">›</button>
+      <span id="month-label">—</span>
+      <button class="nav-btn" onclick="nextMonth()">‹</button>
+    </div>
+  </header>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">إجمالي الشهر</div>
+      <div class="stat-value red" id="stat-total">0 د.ت</div>
+      <div class="stat-sub" id="stat-count">0 معاملة</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">متوسط يومي</div>
+      <div class="stat-value accent" id="stat-daily">0 د.ت</div>
+      <div class="stat-sub">لهذا الشهر</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">أكبر مصروف</div>
+      <div class="stat-value" id="stat-max">—</div>
+      <div class="stat-sub" id="stat-max-cat">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">الفئة الأكثر</div>
+      <div class="stat-value accent" id="stat-top-cat">—</div>
+      <div class="stat-sub" id="stat-top-val">—</div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+
+    <div class="panel">
+      <div class="panel-header"><span class="dot"></span> إضافة مصروف جديد</div>
+      <div class="panel-body">
+        <div class="form-row">
+          <label>وصف المصروف</label>
+          <input id="inp-desc" type="text" placeholder="مثال: قهوة الصباح...">
+        </div>
+        <div class="form-2col">
+          <div class="form-row">
+            <label>المبلغ (د.ت)</label>
+            <input id="inp-amount" type="number" min="0" step="0.1" placeholder="0.000">
+          </div>
+          <div class="form-row">
+            <label>التاريخ</label>
+            <input id="inp-date" type="date">
+          </div>
+        </div>
+        <div class="form-row">
+          <label>الفئة</label>
+          <select id="inp-cat">
+            <option value="طعام">🍽️ طعام ومشروبات</option>
+            <option value="تنقل">🚗 تنقل ومواصلات</option>
+            <option value="ترفيه">🎬 ترفيه</option>
+            <option value="تسوق">🛍️ تسوق</option>
+            <option value="صحة">💊 صحة وعلاج</option>
+            <option value="فواتير">📱 فواتير وخدمات</option>
+            <option value="تعليم">📚 تعليم</option>
+            <option value="أخرى">📦 أخرى</option>
+          </select>
+        </div>
+        <button class="btn-add" onclick="addExpense()">+ إضافة مصروف</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="chart-tabs">
+        <button class="tab-btn active" onclick="switchChart('pie',this)">توزيع الفئات</button>
+        <button class="tab-btn" onclick="switchChart('bar',this)">مصاريف يومية</button>
+        <button class="tab-btn" onclick="switchChart('weekly',this)">أسبوعي</button>
+      </div>
+      <div class="chart-area">
+        <canvas id="mainChart"></canvas>
+      </div>
+      <div class="legend" id="chartLegend"></div>
+    </div>
+
+  </div>
+
+  <div class="panel expenses-panel">
+    <div class="panel-header"><span class="dot"></span> سجل المصاريف</div>
+    <div class="expenses-list" id="expensesList"></div>
+    <div class="footer-bar">
+      <div class="footer-label">إجمالي الشهر المعروض</div>
+      <div class="footer-total" id="footer-total">0.000 د.ت</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const CATS = {
+  'طعام':    { icon:'🍽️', color:'#e8a83a' },
+  'تنقل':    { icon:'🚗', color:'#5c9de0' },
+  'ترفيه':   { icon:'🎬', color:'#9d5ce0' },
+  'تسوق':    { icon:'🛍️', color:'#e05cb4' },
+  'صحة':    { icon:'💊', color:'#5cba8a' },
+  'فواتير':  { icon:'📱', color:'#5cc4ba' },
+  'تعليم':   { icon:'📚', color:'#e0845c' },
+  'أخرى':   { icon:'📦', color:'#a09890' },
+};
+
+let expenses = JSON.parse(localStorage.getItem('exp_data') || '[]');
+let currentChart = null;
+let chartType = 'pie';
+
+const now = new Date();
+let viewYear = now.getFullYear();
+let viewMonth = now.getMonth();
+
+const MONTHS_AR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+
+function save() { localStorage.setItem('exp_data', JSON.stringify(expenses)); }
+
+function todayStr() {
+  const d = new Date();
+  return d.toISOString().split('T')[0];
+}
+
+document.getElementById('inp-date').value = todayStr();
+
+function prevMonth() {
+  viewMonth--; if(viewMonth<0){viewMonth=11;viewYear--;}
+  render();
+}
+function nextMonth() {
+  viewMonth++; if(viewMonth>11){viewMonth=0;viewYear++;}
+  render();
+}
+
+function monthExpenses() {
+  return expenses.filter(e => {
+    const d = new Date(e.date);
+    return d.getFullYear()===viewYear && d.getMonth()===viewMonth;
+  }).sort((a,b) => new Date(b.date)-new Date(a.date));
+}
+
+function addExpense() {
+  const desc = document.getElementById('inp-desc').value.trim();
+  const amount = parseFloat(document.getElementById('inp-amount').value);
+  const date = document.getElementById('inp-date').value;
+  const cat = document.getElementById('inp-cat').value;
+
+  if (!desc || isNaN(amount) || amount<=0 || !date) {
+    document.getElementById('inp-desc').style.borderColor='var(--red)';
+    setTimeout(()=>document.getElementById('inp-desc').style.borderColor='',1500);
+    return;
+  }
+
+  expenses.push({ id: Date.now(), desc, amount, date, cat });
+  save();
+
+  document.getElementById('inp-desc').value = '';
+  document.getElementById('inp-amount').value = '';
+
+  const d = new Date(date);
+  viewYear = d.getFullYear(); viewMonth = d.getMonth();
+  render();
+}
+
+function deleteExpense(id) {
+  expenses = expenses.filter(e=>e.id!==id);
+  save(); render();
+}
+
+function render() {
+  document.getElementById('month-label').textContent = MONTHS_AR[viewMonth]+' '+viewYear;
+  const list = monthExpenses();
+  renderStats(list);
+  renderList(list);
+  renderChart(list);
+}
+
+function renderStats(list) {
+  const total = list.reduce((s,e)=>s+e.amount,0);
+  document.getElementById('stat-total').textContent = total.toFixed(3)+' د.ت';
+  document.getElementById('stat-count').textContent = list.length+' معاملة';
+
+  const days = new Date(viewYear,viewMonth+1,0).getDate();
+  document.getElementById('stat-daily').textContent = (total/days).toFixed(3)+' د.ت';
+
+  if(list.length>0) {
+    const maxE = list.reduce((a,b)=>a.amount>b.amount?a:b);
+    document.getElementById('stat-max').textContent = maxE.amount.toFixed(3)+' د.ت';
+    document.getElementById('stat-max-cat').textContent = maxE.desc.slice(0,20);
+  } else {
+    document.getElementById('stat-max').textContent = '—';
+    document.getElementById('stat-max-cat').textContent = '—';
+  }
+
+  const catTotals = {};
+  list.forEach(e=>{ catTotals[e.cat]=(catTotals[e.cat]||0)+e.amount; });
+  const topCat = Object.entries(catTotals).sort((a,b)=>b[1]-a[1])[0];
+  if(topCat) {
+    document.getElementById('stat-top-cat').textContent = topCat[0];
+    document.getElementById('stat-top-val').textContent = topCat[1].toFixed(3)+' د.ت';
+  } else {
+    document.getElementById('stat-top-cat').textContent = '—';
+    document.getElementById('stat-top-val').textContent = '—';
+  }
+
+  document.getElementById('footer-total').textContent = total.toFixed(3)+' د.ت';
+}
+
+function renderList(list) {
+  const el = document.getElementById('expensesList');
+  if(list.length===0) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div>لا توجد مصاريف لهذا الشهر<br>أضف مصروفاً جديداً لتبدأ التتبع</div>`;
+    return;
+  }
+  el.innerHTML = list.map(e => {
+    const cat = CATS[e.cat]||CATS['أخرى'];
+    const dObj = new Date(e.date+'T00:00:00');
+    const dayName = dObj.toLocaleDateString('ar-TN',{weekday:'short',day:'numeric',month:'short'});
+    return `<div class="expense-item">
+      <div class="cat-icon" style="background:${cat.color}22">${cat.icon}</div>
+      <div class="expense-info">
+        <div class="expense-name">${e.desc}</div>
+        <div class="expense-meta">${e.cat} · ${dayName}</div>
+      </div>
+      <div class="expense-amount">${e.amount.toFixed(3)} د.ت</div>
+      <button class="del-btn" onclick="deleteExpense(${e.id})" title="حذف">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function switchChart(type, btn) {
+  chartType = type;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderChart(monthExpenses());
+}
+
+function renderChart(list) {
+  const canvas = document.getElementById('mainChart');
+  const legend = document.getElementById('chartLegend');
+  if(currentChart){ currentChart.destroy(); currentChart=null; }
+
+  if(chartType==='pie') {
+    const catTotals = {};
+    list.forEach(e=>{ catTotals[e.cat]=(catTotals[e.cat]||0)+e.amount; });
+    const cats = Object.keys(catTotals);
+    const vals = cats.map(c=>catTotals[c]);
+    const colors = cats.map(c=>(CATS[c]||CATS['أخرى']).color);
+    const total = vals.reduce((s,v)=>s+v,0);
+
+    if(cats.length===0){ canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height); legend.innerHTML=''; return; }
+
+    currentChart = new Chart(canvas, {
+      type:'doughnut',
+      data:{ labels:cats, datasets:[{ data:vals, backgroundColor:colors, borderWidth:2, borderColor:'#1a1916', hoverOffset:6 }] },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        cutout:'65%',
+        plugins:{ legend:{display:false}, tooltip:{
+          callbacks:{ label:ctx=>' '+ctx.label+': '+ctx.parsed.toFixed(3)+' د.ت ('+Math.round(ctx.parsed/total*100)+'%)' },
+          rtl:true, bodyFont:{family:'Cairo'}
+        }}
+      }
+    });
+
+    legend.innerHTML = cats.map((c,i)=>`<div class="legend-item"><div class="legend-dot" style="background:${colors[i]}"></div>${c}: ${vals[i].toFixed(3)} د.ت</div>`).join('');
+
+  } else if(chartType==='bar') {
+    const days = new Date(viewYear,viewMonth+1,0).getDate();
+    const dayLabels = Array.from({length:days},(_,i)=>`${i+1}`);
+    const dayVals = Array(days).fill(0);
+    list.forEach(e=>{ const d=new Date(e.date+'T00:00:00').getDate(); dayVals[d-1]+=e.amount; });
+
+    currentChart = new Chart(canvas, {
+      type:'bar',
+      data:{
+        labels:dayLabels,
+        datasets:[{ label:'المصاريف', data:dayVals,
+          backgroundColor:dayVals.map(v=>v>0?'rgba(232,168,58,0.7)':'rgba(255,255,255,0.05)'),
+          borderColor:dayVals.map(v=>v>0?'#e8a83a':'transparent'),
+          borderWidth:1, borderRadius:4
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{
+          callbacks:{ label:ctx=>' '+ctx.parsed.y.toFixed(3)+' د.ت' },
+          rtl:true, bodyFont:{family:'Cairo'}
+        }},
+        scales:{
+          x:{ ticks:{color:'#6a6460',font:{family:'Cairo',size:10}}, grid:{color:'rgba(255,255,255,0.04)'} },
+          y:{ ticks:{color:'#6a6460',font:{family:'Cairo'},callback:v=>v.toFixed(0)}, grid:{color:'rgba(255,255,255,0.04)'} }
+        }
+      }
+    });
+    legend.innerHTML='';
+
+  } else {
+    const weekTotals = [0,0,0,0,0];
+    list.forEach(e=>{
+      const d=new Date(e.date+'T00:00:00').getDate();
+      const w=Math.min(Math.floor((d-1)/7),4);
+      weekTotals[w]+=e.amount;
+    });
+    const wLabels=['الأسبوع 1','الأسبوع 2','الأسبوع 3','الأسبوع 4','الأسبوع 5'];
+
+    currentChart = new Chart(canvas, {
+      type:'bar',
+      data:{
+        labels:wLabels,
+        datasets:[{ label:'المصاريف الأسبوعية', data:weekTotals,
+          backgroundColor:['rgba(232,168,58,0.8)','rgba(92,157,224,0.8)','rgba(157,92,224,0.8)','rgba(92,186,138,0.8)','rgba(224,92,180,0.8)'],
+          borderRadius:6, borderSkipped:false
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{
+          callbacks:{ label:ctx=>' '+ctx.parsed.y.toFixed(3)+' د.ت' },
+          rtl:true, bodyFont:{family:'Cairo'}
+        }},
+        scales:{
+          x:{ ticks:{color:'#a09890',font:{family:'Cairo',size:12}}, grid:{display:false} },
+          y:{ ticks:{color:'#6a6460',font:{family:'Cairo'},callback:v=>v.toFixed(0)}, grid:{color:'rgba(255,255,255,0.04)'} }
+        }
+      }
+    });
+    legend.innerHTML = weekTotals.map((v,i)=>`<div class="legend-item"><div class="legend-dot" style="background:${['#e8a83a','#5c9de0','#9d5ce0','#5cba8a','#e05cb4'][i]}"></div>${wLabels[i]}: ${v.toFixed(3)} د.ت</div>`).join('');
+  }
+}
+
+render();
+</script>
+</body>
+</html>
